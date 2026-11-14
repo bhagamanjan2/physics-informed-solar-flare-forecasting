@@ -16,7 +16,7 @@ Built for university capstone viva defense, this project rigorously investigates
 Clone the repository and install dependencies in Python 3.10+:
 ```bash
 # Clone the repository
-git clone https://github.com/helio-unitov/ASR_cat.git third_party/ASR_cat  # optional external reference
+git clone https://github.com/bhagamanjan2/physics-informed-solar-flare-forecasting.git
 cd solar-flare-prediction
 
 # Create and activate a virtual environment
