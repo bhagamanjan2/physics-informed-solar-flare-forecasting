@@ -1,0 +1,49 @@
+cff-version: 1.2.0
+message: "If you use this software, datasets, or methodology in your research or coursework, please cite it as below."
+title: "Physics-Informed Solar Flare Early Warning Forecasting System"
+abstract: "A machine learning pipeline for multi-horizon (5, 15, 30, and 60 minutes) solar flare forecasting using NOAA GOES-16/18 1-minute X-ray flux series (2022-2024 Solar Cycle 25 maximum) and the Archival Solar Flares (ASR) catalogue. Features physics-based clue groups (brightness dynamics, flare event history, quasi-periodic pulsation spectral ratios, and plasma phase transitions) evaluated under strict chronological validation with blackout buffers."
+version: 1.0.0
+date-released: "2026-11-14"
+license: "MIT"
+repository-code: "https://github.com/helio-unitov/ASR_cat"
+keywords:
+  - "solar flare forecasting"
+  - "space weather"
+  - "GOES XRS"
+  - "machine learning"
+  - "Heidke Skill Score"
+  - "True Skill Statistic"
+  - "quasi-periodic pulsations"
+  - "solar cycle 25"
+
+references:
+  - type: article
+    title: "The Archival Solar Flares (ASR) Catalogue: 1995–2024"
+    authors:
+      - family-names: "Berretti"
+        given-names: "A."
+      - family-names: "Mestici"
+        given-names: "R."
+      - family-names: "Berrilli"
+        given-names: "F."
+      - family-names: "Giovannelli"
+        given-names: "L."
+      - family-names: "Del Moro"
+        given-names: "D."
+    journal: "The Astrophysical Journal Supplement Series"
+    year: 2025
+    volume: "277"
+    issue: "1"
+    doi: "10.3847/1538-4365/adc731"
+    url: "https://doi.org/10.3847/1538-4365/adc731"
+    notes: "ASR catalogue release v1.1 containing comprehensive GOES flare list and background-subtracted integrated flux."
+
+  - type: data
+    title: "GOES-R Series Science-Quality Extreme Ultraviolet and X-Ray Irradiance Sensors (EXIS) 1-Minute X-Ray Sensor (XRS) Data"
+    authors:
+      - name: "NOAA National Centers for Environmental Information (NCEI)"
+    institution:
+      name: "National Oceanic and Atmospheric Administration"
+    year: 2024
+    url: "https://www.ngdc.noaa.gov/stp/satellite/goes/dataaccess.html"
+    notes: "1-minute primary and secondary XRS-B (1–8 Angstrom) solar soft X-ray irradiance flux series (2022–2024)."

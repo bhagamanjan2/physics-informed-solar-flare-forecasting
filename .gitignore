@@ -1,0 +1,11 @@
+# Generated datasets exceed GitHub's file-size limit.
+data/processed/flux_1min.csv
+data/processed/dataset_N*.csv
+data/raw/f_1995_2024.csv
+
+# Local runtime and test artifacts.
+data/.sunpy/
+data/downloads/
+data/sunpy_manager/
+**/__pycache__/
+.pytest_cache/

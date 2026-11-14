@@ -1,0 +1,66 @@
+================================================================================
+                    SOLAR FLARE FORECASTING MODEL REPORT
+Model Algorithm : K-Nearest Neighbors (KNN)
+Target Definition : SIGNIFICANT_FLARE (abs ∈ {C,M,X} AND fclass ∈ {C,M,X})
+Forecast Horizon: N = 30 minutes
+Status          : Candidate Benchmark
+================================================================================
+
+1. MODEL CONFIGURATION & ARCHITECTURAL SUMMARY
+--------------------------------------------------------------------------------
+Model Family       : Instance-Based Classifier
+Parameter Count    : k = 21 neighbours, Euclidean distance
+Decision Threshold : 0.2080 (Validation-Tuned on 2023-2024 Split)
+Class Weighting    : Balanced / Calibrated against minority solar flare events
+Input Features     : 33 Causal Physical Clues (G0: Brightness, G1: History, G2: Pulsations, G3: Phase)
+Data Period        : Trained on 2022-01-01 to 2023-10-20 | Evaluated on 2024-04-04 to 2024-12-31
+
+Description:
+Non-parametric metric-based classification. Subsampled on 40,000 training points for efficiency, tested on all 300,019 test points.
+
+2. HELD-OUT TEST PERFORMANCE BENCHMARK (300,019 Minutes | 69,901 Flare Positives)
+--------------------------------------------------------------------------------
+Primary Metric:
+  Heidke Skill Score (HSS)         : 0.1415  [95% Bootstrap CI: 0.1213 – 0.1627]
+
+Secondary Metrics:
+  True Skill Statistic (TSS)       : 0.1667  [95% Bootstrap CI: 0.1434 – 0.1907]
+  Probability of Detection (Recall): 48.01%  (33,558 of 69,901 positive minutes caught)
+  Precision (Positive Predictive)  : 31.76%
+  False Alarm Ratio (FAR)          : 68.24%
+  Probability of False Detect(POFD): 31.34%
+  F1-Score                         : 0.3823
+  Brier Score (Mean Squared Error) : 0.1783
+  Test Accuracy                    : 63.85%  (Base Rate = 23.30%)
+  ROC-AUC                          : 0.6145
+  PR-AUC                           : 0.3155
+
+3. CONFUSION MATRIX (TEST SET MINUTE COUNTS & PERCENTAGES)
+--------------------------------------------------------------------------------
+                               Predicted Quiet         Predicted Alert              Total
+Actual Quiet (Non-Flare) :        158,007 ( 68.7%)            72,111 ( 31.3%)           230,118
+Actual Flare Precursor   :         36,343 ( 52.0%)            33,558 ( 48.0%)            69,901
+Total Prediction Minutes :        194,350 ( 64.8%)           105,669 ( 35.2%)           300,019
+
+4. SCIKIT-LEARN CLASSIFICATION REPORT FORMAT
+--------------------------------------------------------------------------------
+                  precision    recall  f1-score   support
+    Actual Quiet     0.8130    0.6866    0.7445    230118
+Actual Pre-Flare     0.3176    0.4801    0.3823     69901
+
+        accuracy                         0.6385    300019
+       macro avg     0.5653    0.5834    0.5634    300019
+    weighted avg     0.6976    0.6385    0.6601    300019
+
+5. CROSS-VALIDATION ROBUSTNESS (2022-2023 Training Split)
+--------------------------------------------------------------------------------
+CV Mean HSS : 0.0042 ± 0.0044
+CV Mean TSS : 0.0024
+CV Mean Brier: 0.0968
+
+6. KEY OPERATIONAL & VIVA TAKEAWAYS
+--------------------------------------------------------------------------------
+• Clinical/Physical Utility: Serves as an empirical comparative baseline demonstrating the critical necessity of machine learning features.
+• Leakage Defense: Strict 25-hour blackout gaps between chronological splits guarantee zero boundary contamination.
+• Computational Cost: Fast inference suitable for real-time edge processing on solar observatory data streams.
+================================================================================

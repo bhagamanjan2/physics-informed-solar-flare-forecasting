@@ -1,0 +1,21 @@
+Metadata-Version: 2.4
+Name: solarflare
+Version: 0.1.0
+Summary: Machine Learning for multi-horizon solar flare forecasting using NOAA GOES data
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.26.0
+Requires-Dist: pandas>=2.2.0
+Requires-Dist: scipy>=1.11.0
+Requires-Dist: scikit-learn>=1.4.0
+Requires-Dist: matplotlib>=3.8.0
+Requires-Dist: seaborn>=0.13.0
+Requires-Dist: joblib>=1.3.0
+Requires-Dist: pyyaml>=6.0.0
+Requires-Dist: rich>=13.0.0
+Requires-Dist: nbformat>=5.9.0
+Requires-Dist: nbconvert>=7.16.0
+Requires-Dist: sunpy>=6.0.0
+
+# physics-informed-solar-flare-forecasting
+Machine Learning project for multi-horizon solar flame forecasting using NOAA GOES data

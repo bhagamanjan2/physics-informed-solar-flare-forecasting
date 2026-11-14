@@ -1,0 +1,72 @@
+# Solar Flare Forecasting Configuration
+# Master configuration file for capstone project
+
+# Execution mode: 'real' (when real GOES data & flare list exist) or 'synthetic' (for development/testing)
+data_mode: real
+
+# Fast mode: when true, subsample data for slower models (KNN, SVM) to enable rapid testing on laptops
+fast_mode: true
+
+# Reproducibility
+seed: 42
+
+# Timeframe for analysis
+# Locked decision: 2022-2024 (covers rising phase to peak of Solar Cycle 25)
+years:
+  - 2022
+  - 2023
+  - 2024
+
+# Prediction target definition
+# Locked decision: SIGNIFICANT_FLARE
+# Target is positive if a flare row has abs_class_simple in {C, M, X} AND fclass_simple in {C, M, X}.
+# Rationale: At solar maximum (2022-2024), solar background flux frequently sits at C-level,
+# causing ~85% of absolute C-flares to be micro-bumps (A/B class energy above background).
+# SIGNIFICANT_FLARE ensures genuine flare energy injection of C-class or higher.
+target: SIGNIFICANT_FLARE
+
+# Prediction horizons in minutes (one binary classification model per horizon)
+horizons:
+  - 5
+  - 15
+  - 30
+  - 60
+
+# Flare classes to predict (NOAA standard classification: C, M, X are flares of interest)
+flare_classes:
+  - C
+  - M
+  - X
+
+# Feature engineering parameters
+features:
+  rolling_background_hours: 6
+  flux_windows_min: [5, 15, 30, 60]
+  pulsation_window_min: 30
+  pulsation_period_bands_min:
+    - [2, 5]
+    - [5, 12]
+    - [12, 30]
+  history_windows_hours: [6, 24]
+
+# Train / Validation / Test chronological split
+split:
+  train_ratio: 0.60
+  val_ratio: 0.15
+  test_ratio: 0.25
+  gap_hours: 25   # 24h longest lookback + 1h longest horizon
+  cv_folds: 5     # Blocked time-series CV folds
+
+# File paths
+paths:
+  raw_flare_csv: "data/raw/f_1995_2024.csv"
+  raw_flux_dir: "data/raw/"
+  processed_flux_csv: "data/processed/flux_1min.csv"
+  processed_flares_csv: "data/processed/flares.csv"
+  dataset_pattern: "data/processed/dataset_N{N}.csv"
+  predictions_pattern: "results/predictions_N{N}_{model}.csv"
+  models_dir: "models/"
+  results_dir: "results/"
+  figures_dir: "results/figures/"
+  reports_dir: "docs/"
+
