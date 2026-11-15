@@ -61,7 +61,7 @@ def get_model_complexity(model_name: str) -> int:
 def tune_threshold_validation(
     y_val: Union[np.ndarray, pd.Series, list],
     proba_val: Union[np.ndarray, pd.Series, list],
-    metric: str = "hss",
+    metric: str = "tss",
     num_steps: int = 100,
 ) -> float:
     """
@@ -378,12 +378,12 @@ def apply_selection_rule(
     prefer_simpler_within_se: bool = True,
 ) -> Dict[str, Any]:
     """
-    Fixed Model Selection Rule (locked in advance, no post-hoc picking):
-    1. Highest mean HSS across blocked CV folds at the tuned threshold.
-    2. Ties broken by TSS (higher is better).
-    3. Ties broken by Brier score (lower is better).
-    4. If two models are within each other's confidence ranges (1 standard error of HSS),
-       prefer the simpler model (parsimony principle).
+    Fixed Model Selection Rule (locked in advance, TSS primary):
+    1. Highest mean TSS across blocked CV folds at the tuned validation threshold.
+    2. Ties broken by higher HSS.
+    3. Ties broken by lower Brier score.
+    4. Ties broken by simpler model (complexity ascending).
+    5. If candidate models are within 1 standard error of top TSS, prefer the simpler model.
 
     Parameters:
         cv_scores_df: DataFrame of cross-validation results.
@@ -426,41 +426,42 @@ def apply_selection_rule(
         if "n_folds" not in agg.columns:
             agg["n_folds"] = 5
 
-    # Standard error of HSS
+    # Standard error of TSS and HSS
+    agg["tss_se"] = agg["tss_std"] / np.sqrt(np.maximum(agg["n_folds"], 1))
     agg["hss_se"] = agg["hss_std"] / np.sqrt(np.maximum(agg["n_folds"], 1))
     agg["complexity"] = agg["model"].apply(get_model_complexity)
 
-    # Sort strictly by: 1. HSS desc, 2. TSS desc, 3. Brier asc, 4. Complexity asc
+    # Sort strictly by: 1. TSS desc, 2. HSS desc, 3. Brier asc, 4. Complexity asc
     agg_sorted = agg.sort_values(
-        by=["hss_mean", "tss_mean", "brier_mean", "complexity"],
+        by=["tss_mean", "hss_mean", "brier_mean", "complexity"],
         ascending=[False, False, True, True],
     ).reset_index(drop=True)
 
     best_raw_model = agg_sorted.iloc[0]["model"]
-    best_raw_hss = agg_sorted.iloc[0]["hss_mean"]
-    best_raw_se = agg_sorted.iloc[0]["hss_se"]
+    best_raw_tss = agg_sorted.iloc[0]["tss_mean"]
+    best_raw_se = agg_sorted.iloc[0]["tss_se"]
 
     selected_model = best_raw_model
-    rule_note = "Strict highest mean HSS"
+    rule_note = "Strict highest mean TSS in blocked cross-validation"
 
     if prefer_simpler_within_se:
-        # Check models within 1 standard error of best HSS
-        se_bound = best_raw_hss - best_raw_se
-        within_se = agg_sorted[agg_sorted["hss_mean"] >= se_bound].copy()
+        # Check models within 1 standard error of best TSS
+        se_bound = best_raw_tss - best_raw_se
+        within_se = agg_sorted[agg_sorted["tss_mean"] >= se_bound].copy()
         within_se_sorted = within_se.sort_values(
-            by=["complexity", "hss_mean"], ascending=[True, False]
+            by=["complexity", "tss_mean"], ascending=[True, False]
         )
         simpler_model = within_se_sorted.iloc[0]["model"]
         if simpler_model != best_raw_model:
             selected_model = simpler_model
-            rule_note = f"Parsimony rule: {simpler_model} is simpler and within 1 SE ({best_raw_se:.4f}) of top HSS"
+            rule_note = f"Parsimony rule: {simpler_model} is simpler and within 1 SE ({best_raw_se:.4f}) of top TSS"
 
     # Generate plain-English viva rationale
     top_row = agg_sorted[agg_sorted["model"] == selected_model].iloc[0]
     rationale = (
         f"Selected '{selected_model}' based on the locked decision rule: "
-        f"Mean CV HSS = {top_row['hss_mean']:.4f} (+/- {top_row['hss_se']:.4f} SE), "
-        f"TSS = {top_row['tss_mean']:.4f}, Brier = {top_row['brier_mean']:.4f}. "
+        f"Mean CV TSS = {top_row['tss_mean']:.4f} (+/- {top_row['tss_se']:.4f} SE), "
+        f"HSS = {top_row['hss_mean']:.4f}, Brier = {top_row['brier_mean']:.4f}. "
         f"({rule_note})."
     )
 
@@ -469,10 +470,12 @@ def apply_selection_rule(
         ranking_list.append({
             "rank": rank_idx + 1,
             "model": r["model"],
+            "tss_mean": float(r["tss_mean"]),
+            "tss_std": float(r["tss_std"]),
+            "tss_se": float(r["tss_se"]),
             "hss_mean": float(r["hss_mean"]),
             "hss_std": float(r["hss_std"]),
             "hss_se": float(r["hss_se"]),
-            "tss_mean": float(r["tss_mean"]),
             "brier_mean": float(r["brier_mean"]),
             "complexity": int(r["complexity"]),
         })

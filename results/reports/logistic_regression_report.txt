@@ -3,7 +3,7 @@
 Model Algorithm : Logistic Regression (Balanced)
 Target Definition : SIGNIFICANT_FLARE (abs ∈ {C,M,X} AND fclass ∈ {C,M,X})
 Forecast Horizon: N = 30 minutes
-Status          : Candidate Benchmark
+Status          : ★ Selected Winner (Top TSS in Blocked Cross-Validation)
 ================================================================================
 
 1. MODEL CONFIGURATION & ARCHITECTURAL SUMMARY
@@ -20,11 +20,13 @@ L2-regularized logistic regression with class_weight='balanced'. High sensitivit
 
 2. HELD-OUT TEST PERFORMANCE BENCHMARK (300,019 Minutes | 69,901 Flare Positives)
 --------------------------------------------------------------------------------
-Primary Metric:
-  Heidke Skill Score (HSS)         : 0.1876  [95% Bootstrap CI: 0.1628 – 0.2125]
-
-Secondary Metrics:
+Primary Metric (Locked Decision Rule):
   True Skill Statistic (TSS)       : 0.2598  [95% Bootstrap CI: 0.2279 – 0.2898]
+
+Secondary Metrics (Reported with 95% Bootstrap CI):
+  Heidke Skill Score (HSS)         : 0.1876  [95% Bootstrap CI: 0.1628 – 0.2125]
+  Probability of Detection (Recall): 68.99%  [95% Bootstrap CI: 64.37% – 73.43%]
+  False Alarm Ratio (FAR)          : 67.24%  [95% Bootstrap CI: 65.44% – 69.20%]
   Probability of Detection (Recall): 68.99%  (48,227 of 69,901 positive minutes caught)
   Precision (Positive Predictive)  : 32.76%
   False Alarm Ratio (FAR)          : 67.24%

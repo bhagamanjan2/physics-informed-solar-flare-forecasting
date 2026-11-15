@@ -55,7 +55,11 @@ def create_synthetic_predictions_if_needed(
 ) -> None:
     """Generate mock prediction CSVs for pipeline verification when models have not finished training."""
     rng = np.random.default_rng(random_state)
-    dates = pd.date_range("2024-01-01", periods=n_days, freq="D").strftime("%Y-%m-%d").tolist()
+    dates = (
+        pd.date_range("2024-01-01", periods=n_days, freq="D")
+        .strftime("%Y-%m-%d")
+        .tolist()
+    )
 
     val_days = dates[:20]
     test_days = dates[20:]
@@ -76,22 +80,32 @@ def create_synthetic_predictions_if_needed(
                 if model == "all_quiet":
                     p = np.zeros(n_mins)
                 elif model == "persistence":
-                    p = np.clip(y * 0.4 + rng.uniform(0.01, 0.25, size=n_mins), 0.0, 1.0)
+                    p = np.clip(
+                        y * 0.4 + rng.uniform(0.01, 0.25, size=n_mins), 0.0, 1.0
+                    )
                 elif model in ["random_forest", "gradient_boosting"]:
-                    p = np.clip(y * 0.65 + rng.uniform(0.01, 0.30, size=n_mins), 0.0, 1.0)
+                    p = np.clip(
+                        y * 0.65 + rng.uniform(0.01, 0.30, size=n_mins), 0.0, 1.0
+                    )
                 elif model == "logistic_regression":
-                    p = np.clip(y * 0.55 + rng.uniform(0.02, 0.35, size=n_mins), 0.0, 1.0)
+                    p = np.clip(
+                        y * 0.55 + rng.uniform(0.02, 0.35, size=n_mins), 0.0, 1.0
+                    )
                 else:
-                    p = np.clip(y * 0.50 + rng.uniform(0.02, 0.40, size=n_mins), 0.0, 1.0)
+                    p = np.clip(
+                        y * 0.50 + rng.uniform(0.02, 0.40, size=n_mins), 0.0, 1.0
+                    )
 
                 for minute_idx in range(n_mins):
-                    rows.append({
-                        "time": f"{day} {minute_idx // 60:02d}:{minute_idx % 60:02d}:00",
-                        "y_true": int(y[minute_idx]),
-                        "proba": float(p[minute_idx]),
-                        "split": split,
-                        "day": day,
-                    })
+                    rows.append(
+                        {
+                            "time": f"{day} {minute_idx // 60:02d}:{minute_idx % 60:02d}:00",
+                            "y_true": int(y[minute_idx]),
+                            "proba": float(p[minute_idx]),
+                            "split": split,
+                            "day": day,
+                        }
+                    )
 
             df_pred = pd.DataFrame(rows)
             df_pred.to_csv(pred_file, index=False)
@@ -111,7 +125,9 @@ def evaluate_all(
     # Check for existing prediction files
     pred_files = list(results_dir.glob("predictions_N*.csv"))
     if not pred_files or force_synthetic:
-        print("[Evaluate] No existing predictions found or force_synthetic set. Generating synthetic test predictions...")
+        print(
+            "[Evaluate] No existing predictions found or force_synthetic set. Generating synthetic test predictions..."
+        )
         create_synthetic_predictions_if_needed(str(results_dir), horizons)
         pred_files = list(results_dir.glob("predictions_N*.csv"))
 
@@ -140,15 +156,17 @@ def evaluate_all(
             # 1. Validation split: tune threshold
             df_val = df[df["split"] == "val"]
             if df_val.empty:
-                print(f"  Warning: No validation rows in {pfile.name}, defaulting threshold to 0.5")
+                print(
+                    f"  Warning: No validation rows in {pfile.name}, defaulting threshold to 0.5"
+                )
                 tuned_th = 0.5
             else:
                 tuned_th = tune_threshold_validation(
-                    df_val["y_true"].values, df_val["proba"].values, metric="hss"
+                    df_val["y_true"].values, df_val["proba"].values, metric="tss"
                 )
 
             thresholds_out[f"N{h}"][model_name] = float(tuned_th)
-            print(f"  Validation tuned threshold (max HSS): {tuned_th:.4f}")
+            print(f"  Validation tuned threshold (max TSS): {tuned_th:.4f}")
 
             # 2. Test split: evaluate with day-block bootstrap
             df_test = df[df["split"] == "test"]
@@ -166,29 +184,33 @@ def evaluate_all(
             )
 
             for _, row in ci_df.iterrows():
-                test_metrics_records.append({
-                    "horizon": int(h),
-                    "model": model_name,
-                    "threshold": float(tuned_th),
-                    "metric": row["metric"],
-                    "point_estimate": float(row["point_estimate"]),
-                    "mean": float(row["mean"]),
-                    "ci_lower": float(row["ci_lower"]),
-                    "ci_upper": float(row["ci_upper"]),
-                    "std": float(row["std"]),
-                })
+                test_metrics_records.append(
+                    {
+                        "horizon": int(h),
+                        "model": model_name,
+                        "threshold": float(tuned_th),
+                        "metric": row["metric"],
+                        "point_estimate": float(row["point_estimate"]),
+                        "mean": float(row["mean"]),
+                        "ci_lower": float(row["ci_lower"]),
+                        "ci_upper": float(row["ci_upper"]),
+                        "std": float(row["std"]),
+                    }
+                )
 
             # Record CV / test score summary for model selection
             hss_pt = ci_df[ci_df["metric"] == "hss"]["point_estimate"].values[0]
             tss_pt = ci_df[ci_df["metric"] == "tss"]["point_estimate"].values[0]
             brier_pt = ci_df[ci_df["metric"] == "brier"]["point_estimate"].values[0]
-            cv_records_for_selection.append({
-                "horizon": int(h),
-                "model": model_name,
-                "hss": float(hss_pt),
-                "tss": float(tss_pt),
-                "brier": float(brier_pt),
-            })
+            cv_records_for_selection.append(
+                {
+                    "horizon": int(h),
+                    "model": model_name,
+                    "hss": float(hss_pt),
+                    "tss": float(tss_pt),
+                    "brier": float(brier_pt),
+                }
+            )
 
     # Save thresholds.json
     thresholds_file = results_dir / "thresholds.json"
@@ -253,8 +275,17 @@ def evaluate_all(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate flare forecasting models.")
     parser.add_argument("--config", default="config.yaml", help="Path to config.yaml")
-    parser.add_argument("--bootstraps", type=int, default=1000, help="Number of day bootstrap iterations")
-    parser.add_argument("--synthetic", action="store_true", help="Force synthetic predictions generation")
+    parser.add_argument(
+        "--bootstraps",
+        type=int,
+        default=1000,
+        help="Number of day bootstrap iterations",
+    )
+    parser.add_argument(
+        "--synthetic",
+        action="store_true",
+        help="Force synthetic predictions generation",
+    )
     args = parser.parse_args()
 
     evaluate_all(
